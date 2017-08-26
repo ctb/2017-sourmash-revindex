@@ -62,7 +62,8 @@ def main():
         this_signum = signum
         signum += 1
 
-        sig.minhash = sig.minhash.downsample_scaled(args.scaled)
+        if sig.minhash.scaled < args.scaled:
+            sig.minhash = sig.minhash.downsample_scaled(args.scaled)
 
         # add hashval -> signature info
         mins = sig.minhash.get_mins()
