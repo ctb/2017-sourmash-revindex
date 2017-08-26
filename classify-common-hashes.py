@@ -43,8 +43,11 @@ def main():
     print('found', found, 'of', total)
     print('distribution of unknowns:')
     print('commonality n')
-    for k, cnt in unknown.items():
-        print('{} {}'.format(k, cnt))
+
+    sofar = 0
+    for k, cnt in sorted(unknown.items()):
+        sofar += cnt
+        print('{} {} {}'.format(k, cnt, sofar))
 
 
 if __name__ == '__main__':
