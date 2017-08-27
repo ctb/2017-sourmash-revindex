@@ -27,8 +27,11 @@ def main():
 
     args = p.parse_args()
 
-    # track hashval -> set of signature IDs
-    hashval_to_sigids = defaultdict(set)
+    # track hashval -> list of signature IDs
+    hashval_to_sigids = defaultdict(list)
+
+    # track hashval -> list of abundances
+    hashval_to_abunds = defaultdict(list)
 
     # track sigIDs -> (filename, signature md5)
     signum = 1
@@ -66,9 +69,11 @@ def main():
             sig.minhash = sig.minhash.downsample_scaled(args.scaled)
 
         # add hashval -> signature info
-        mins = sig.minhash.get_mins()
-        for m in mins:
-            hashval_to_sigids[m].add(this_signum)
+        mins = sig.minhash.get_mins(with_abundance=True)
+        for m, abund in mins.items():
+            hashval_to_sigids[m].append(this_signum)
+            hashval_to_abunds[m].append(abund)
+
     print('\n...done. {} hashvals, {} signatures'.format(len(hashval_to_sigids), len(sigid_to_siginfo)))
 
     if bad_input:
@@ -77,11 +82,14 @@ def main():
 
     hashval_picklefile = args.savename + '.hashvals'
     sig_picklefile = args.savename + '.siginfo'
+    abund_picklefile = args.savename + '.abunds'
 
     with open(hashval_picklefile, 'wb') as hashval_fp:
         dump(hashval_to_sigids, hashval_fp)
     with open(sig_picklefile, 'wb') as sig_fp:
         dump(sigid_to_siginfo, sig_fp)
+    with open(abund_picklefile, 'wb') as abund_fp:
+        dump(hashval_to_abunds, abund_fp)
 
 
 if __name__ == '__main__':
