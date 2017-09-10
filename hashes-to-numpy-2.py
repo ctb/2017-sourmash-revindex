@@ -24,14 +24,19 @@ def main():
     counts = collections.Counter()
 
     print('loading signatures from', len(args.inp_signatures), 'files')
-    for filename in args.inp_signatures:
+    sig_hashes = {}
+    for n, filename in enumerate(args.inp_signatures):
+        print('... {}'.format(n + 1), end='\r')
         sig = sourmash_lib.signature.load_one_signature(filename,
                                                         select_ksize=args.ksize)
         mh = sig.minhash.downsample_scaled(args.scaled)
         hashes = mh.get_mins()
+        sig_hashes[filename] = hashes
 
         for k in hashes:
             counts[k] += 1
+
+    print('\n...done. Now finding common hashes among >= {} samples'.format(args.threshold))
 
     n = 0
     abundant_hashes = set()
@@ -54,12 +59,9 @@ def main():
     for n, k in enumerate(hashlist):
         hashdict[k] = n                   # hash -> index in hashlist
                          
-    print('load x 2 signatures from', len(args.inp_signatures), 'files')
-    for fn, filename in enumerate(args.inp_signatures):
-        sig = sourmash_lib.signature.load_one_signature(filename,
-                                                        select_ksize=args.ksize)
-        mh = sig.minhash
-        mh = mh.downsample_scaled(args.scaled)
+    print('iterate x 2 signatures from', len(args.inp_signatures), 'files')
+    for fn, (filename, hashes) in enumerate(sig_hashes.items()):
+        print('... {}'.format(fn + 1), end='\r')
         hashes = mh.get_mins()
 
         x = abundant_hashes.intersection(hashes)
@@ -69,7 +71,7 @@ def main():
                 idx2 = hashdict[hashval2]
                 pa[idx2][idx] = 1
 
-    print('saving to:', args.output_name)
+    print('\ndone! saving to:', args.output_name)
 
     with open(args.output_name, 'wb') as fp:
         numpy.save(fp, pa)
