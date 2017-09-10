@@ -19,6 +19,7 @@ def main():
     p.add_argument('--scaled', type=int, default=100000)
     p.add_argument('-o', '--output-name')
     p.add_argument('--threshold', type=int, default=2)
+    p.add_argument('--max-threshold', type=int, default=None)
     args = p.parse_args()
 
     counts = collections.Counter()
@@ -41,6 +42,9 @@ def main():
     n = 0
     abundant_hashes = set()
     for hash, count in counts.most_common():
+        if args.max_threshold and count > args.max_threshold:
+            continue
+
         if count >= args.threshold:
             n += 1
             abundant_hashes.add(hash)
