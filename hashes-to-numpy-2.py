@@ -62,7 +62,6 @@ def main():
     print('iterate x 2 signatures from', len(args.inp_signatures), 'files')
     for fn, (filename, hashes) in enumerate(sig_hashes.items()):
         print('... {}'.format(fn + 1), end='\r')
-        hashes = mh.get_mins()
 
         x = abundant_hashes.intersection(hashes)
         for hashval in x:
