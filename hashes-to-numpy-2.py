@@ -62,9 +62,11 @@ def main():
         if args.max_threshold and count > args.max_threshold:
             continue
 
-        if count >= args.threshold:
-            n += 1
-            abundant_hashes.add(hash)
+        if count < args.threshold:
+            break
+
+        n += 1
+        abundant_hashes.add(hash)
 
     print('found', n, 'hashes from', len(args.inp_signatures), 'signatures')
     print('min threshold: {}'.format(args.threshold))
