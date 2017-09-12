@@ -102,7 +102,7 @@ def main():
         numpy.save(fp, pa)
 
     with open(args.output_name + '.labels.txt', 'w') as fp:
-        fp.write("\n".join(map(str, hashdict)))
+        fp.write("\n".join(map(str, hashlist)))
             
 
 if __name__ == '__main__':
