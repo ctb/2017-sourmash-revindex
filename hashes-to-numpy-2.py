@@ -20,9 +20,22 @@ def main():
     p.add_argument('--threshold', type=int, default=2)
     p.add_argument('--max-threshold', type=int, default=None)
     p.add_argument('--frequency', action='store_true')
+    p.add_argument('--intersect', nargs='+',
+                   help='only use hashes in the given files')
     args = p.parse_args()
 
     counts = collections.Counter()
+
+    intersect_hashes = set()
+    if args.intersect:
+        for n, filename in enumerate(args.intersect):
+            print('...loading intersect {}'.format(n + 1), end='\r')
+            sig = sourmash_lib.signature.load_one_signature(filename,
+                                                            select_ksize=args.ksize)
+            mh = sig.minhash.downsample_scaled(args.scaled)
+            hashes = mh.get_mins()
+            intersect_hashes.update(hashes)
+        print('')
 
     print('loading signatures from', len(args.inp_signatures), 'files')
     sig_hashes = {}
@@ -31,6 +44,10 @@ def main():
         sig = sourmash_lib.load_one_signature(filename,select_ksize=args.ksize)
         mh = sig.minhash.downsample_scaled(args.scaled)
         hashes = mh.get_mins()
+
+        if intersect_hashes:
+            hashes = set(hashes)
+            hashes.intersection_update(intersect_hashes)
 
         sig_hashes[filename] = hashes
 
