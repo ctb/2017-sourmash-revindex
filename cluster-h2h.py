@@ -32,16 +32,23 @@ def main():
 
     print('loading matrix {}'.format(args.h2n_matrix))
     mat, sample_labels = sourmash_lib.fig.load_matrix_and_labels(args.h2n_matrix)
+
+    print('clustering with HDBSCAN')
     cluster_labels = hdbscan.HDBSCAN(min_cluster_size=20).fit_predict(mat)
 
+    print('...done! extracting clusters')
     df = make_sample_df(cluster_labels, sample_labels)
 
     cluster_sizes = list(set(df.cluster_size))
     cluster_sizes.sort()
     cluster_sizes.reverse()
     cluster_sizes = cluster_sizes[:100]
-    
-    cluster_ids = list(df[df.cluster_size.isin(cluster_sizes)].cluster)
+
+    print('got {} cluster sizes'.format(len(cluster_sizes)))
+
+    cluster_ids = set(df[df.cluster_size.isin(cluster_sizes)].cluster)
+
+    print('got {} cluster IDs'.format(len(cluster_ids)))
 
     for cluster_id in cluster_ids:
         mh = sourmash_lib.MinHash(0, 51, scaled=100000)
