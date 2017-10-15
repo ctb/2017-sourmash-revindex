@@ -9,7 +9,8 @@ import argparse
 import collections
 import sourmash_lib.signature
 import numpy
-
+import os
+import warnings
 
 def main():
     p = argparse.ArgumentParser()
@@ -41,18 +42,20 @@ def main():
     sig_hashes = {}
     for n, filename in enumerate(args.inp_signatures):
         print('... {}'.format(n + 1), end='\r')
-        sig = sourmash_lib.load_one_signature(filename, ksize=args.ksize)
-        mh = sig.minhash.downsample_scaled(args.scaled)
-        hashes = mh.get_mins()
+        if os.path.isfile(filename):
+            sig = sourmash_lib.load_one_signature(filename, ksize=args.ksize)
+            mh = sig.minhash.downsample_scaled(args.scaled)
+            hashes = mh.get_mins()
 
-        if intersect_hashes:
-            hashes = set(hashes)
-            hashes.intersection_update(intersect_hashes)
+            if intersect_hashes:
+                hashes = set(hashes)
+                hashes.intersection_update(intersect_hashes)
 
-        sig_hashes[filename] = hashes
-        for k in hashes:
-            counts[k] += 1
-
+            sig_hashes[filename] = hashes
+            for k in hashes:
+                counts[k] += 1
+        else:
+            print(filename + ' not found. Skipping.')
     print('\n...done. Now finding common hashes among >= {} samples'.format(args.threshold))
 
     n = 0
@@ -80,7 +83,7 @@ def main():
     hashdict = {}
     for n, k in enumerate(hashlist):
         hashdict[k] = n                   # hash -> index in hashlist
-                         
+
     print('calculating matrix {} x {}'.format(len(abundant_hashes),
                                               len(abundant_hashes)))
 
@@ -108,7 +111,7 @@ def main():
 
     with open(args.output_name + '.labels.txt', 'w') as fp:
         fp.write("\n".join(map(str, hashlist)))
-            
+
 
 if __name__ == '__main__':
     main()
