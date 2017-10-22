@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """
+Build a reverse index of hashes-to-samples.
 """
 import sys, os
 import sourmash_lib, sourmash_lib.signature

@@ -1,4 +1,10 @@
 #! /usr/bin/env python
+"""
+Given one or more LCA databases, and a revindex, apply LCA
+classification to those hashes with abundance higher than
+--abundance-threshold in more than --sample-threshold samples.
+Then output statistics about how many remain unclassified.
+"""
 import argparse
 import collections
 import sys
