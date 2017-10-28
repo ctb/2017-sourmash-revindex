@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+# @CTB we should be storing the ksize here, although we can get it from
+# the signatures...
 from pickle import load
 import sourmash_lib.signature
 

@@ -44,6 +44,8 @@ def main():
     else:
         inp_files = list(args.sigs)
 
+    print('ksize={} scaled={}'.format(args.ksize, args.scaled))
+
     print('loading signatures & traversing hashes')
     bad_input = 0
     for n, filename in enumerate(inp_files):
@@ -52,7 +54,7 @@ def main():
 
         try:
             sig = sourmash_lib.signature.load_one_signature(filename,
-                                                      select_ksize=args.ksize)
+                                                            ksize=args.ksize)
         except (FileNotFoundError, ValueError):
             if not args.traverse_directory:
                 raise
@@ -71,6 +73,10 @@ def main():
 
         # add hashval -> signature info
         mins = sig.minhash.get_mins(with_abundance=True)
+        try:
+            mins.keys
+        except AttributeError:            # not a dictionary
+            mins = dict([ (m, 1) for m in mins ])
         for m, abund in mins.items():
             hashval_to_sigids[m].append(this_signum)
             hashval_to_abunds[m].append(abund)
