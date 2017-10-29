@@ -31,7 +31,7 @@ def main():
         for n, filename in enumerate(args.intersect):
             print('...loading intersect {}'.format(n + 1), end='\r')
             sig = sourmash_lib.signature.load_one_signature(filename,
-                                                            select_ksize=args.ksize)
+                                                            ksize=args.ksize)
             mh = sig.minhash.downsample_scaled(args.scaled)
             hashes = mh.get_mins()
             intersect_hashes.update(hashes)
@@ -41,7 +41,7 @@ def main():
     sig_hashes = {}
     for n, filename in enumerate(args.inp_signatures):
         print('... {}'.format(n + 1), end='\r')
-        sig = sourmash_lib.load_one_signature(filename,select_ksize=args.ksize)
+        sig = sourmash_lib.load_one_signature(filename, ksize=args.ksize)
         mh = sig.minhash.downsample_scaled(args.scaled)
         hashes = mh.get_mins()
 

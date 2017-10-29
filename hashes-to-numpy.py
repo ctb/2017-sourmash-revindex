@@ -26,7 +26,7 @@ def main():
     print('loading signatures from', len(args.inp_signatures), 'files')
     for filename in args.inp_signatures:
         sig = sourmash_lib.signature.load_one_signature(filename,
-                                                        select_ksize=args.ksize)
+                                                        ksize=args.ksize)
         mh = sig.minhash.downsample_scaled(args.scaled)
         hashes = mh.get_mins()
 
@@ -57,7 +57,7 @@ def main():
     print('load x 2 signatures from', len(args.inp_signatures), 'files')
     for fn, filename in enumerate(args.inp_signatures):
         sig = sourmash_lib.signature.load_one_signature(filename,
-                                                        select_ksize=args.ksize)
+                                                        ksize=args.ksize)
         mh = sig.minhash
         mh = mh.downsample_scaled(args.scaled)
         hashes = mh.get_mins()
