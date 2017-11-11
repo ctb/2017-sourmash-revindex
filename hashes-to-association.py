@@ -86,23 +86,23 @@ def main():
 
     empty = set()
     for n, hashval1 in enumerate(hashlist):
+        if n % 1000 == 0:
+            print('...', n)
         a = hashes_by_sig.get(hashval1, empty)
         for o, hashval2 in enumerate(hashlist):
-            if n <= o:
-                b = hashes_by_sig.get(hashval2, empty)
-                common = len(a.intersection(b))
-                pa[n][o] = common
-                pa[o][n] = common
-
-    pa /= float(n)
+            b = hashes_by_sig.get(hashval2, empty)
+            common = len(a.intersection(b))
+            frac = 2*common / float(len(a) + len(b))
+            pa[n][o] = frac
 
     print('\ndone! saving to:', args.output_name)
 
-    with open(args.output_name, 'wb') as fp:
-        numpy.save(fp, pa)
+    if args.output_name:
+        with open(args.output_name, 'wb') as fp:
+            numpy.save(fp, pa)
 
-    with open(args.output_name + '.labels.txt', 'w') as fp:
-        fp.write("\n".join(map(str, hashlist)))
+        with open(args.output_name + '.labels.txt', 'w') as fp:
+            fp.write("\n".join(map(str, hashlist)))
             
 
 if __name__ == '__main__':
