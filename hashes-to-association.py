@@ -84,17 +84,19 @@ def main():
     print('calculating matrix {} x {}'.format(len(abundant_hashes),
                                               len(abundant_hashes)))
 
-    empty = set()
     for n, hashval1 in enumerate(hashlist):
         if n % 1000 == 0:
             print('...', n)
-        a = hashes_by_sig.get(hashval1, empty)
+        a = hashes_by_sig.get(hashval1)
         for o, hashval2 in enumerate(hashlist):
-            b = hashes_by_sig.get(hashval2, empty)
-            common = len(a.intersection(b))
-            frac = 2*common / float(len(a) + len(b))
-            pa[n][o] = frac
+            if o <= n:
+                b = hashes_by_sig.get(hashval2)
+                common = len(a.intersection(b))
+                frac = 2*common / float(len(a) + len(b))
+                pa[n][o] = frac
+                pa[o][n] = frac
 
+    print('XXX', pa.min(), pa.max())
     print('\ndone! saving to:', args.output_name)
 
     if args.output_name:
