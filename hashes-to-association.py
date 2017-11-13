@@ -92,7 +92,8 @@ def main():
             if o <= n:
                 b = hashes_by_sig.get(hashval2)
                 common = len(a.intersection(b))
-                frac = 2*common / float(len(a) + len(b))
+                denom = max(len(a), len(b))
+                frac = 2*common / float(denom)
                 pa[n][o] = frac
                 pa[o][n] = frac
 
