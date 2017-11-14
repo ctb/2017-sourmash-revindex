@@ -14,10 +14,11 @@ import sys
 
 
 def mutinfo(total_n, n_common, n_a, n_b):
+    mi = 0.0
+    norm = 1
+
     if n_common:
-        mi = math.log(n_common / total_n * total_n / n_a * total_n / n_a)
-        return mi
-    
+        mi = math.log(float(n_common) / n_a / n_b * total_n, 2)
         norm = -math.log(n_common / total_n)
         if norm:
             mi /= norm
@@ -26,9 +27,11 @@ def mutinfo(total_n, n_common, n_a, n_b):
             assert n_common == n_a
             assert n_common == n_b
             mi = 1.0
-        return mi
 
-    return 0.0
+#    if mi < 0:
+#        print('ZZZ', total_n, n_common, n_a, n_b, mi, norm)
+            
+    return mi*n_common
 
 
 def test_mutinfo():
