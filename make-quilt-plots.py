@@ -122,6 +122,10 @@ def main():
         # intersect with the database of samples
         query_hashes.intersection_update(all_hashes)
 
+        if len(query_hashes) == 0:
+            print('SKIPPING {}, no intersect hashes'.format(filename))
+            continue
+
         # build matrix
         pa = numpy.zeros((len(query_hashes), len(query_hashes)),
                           dtype=numpy.float)
