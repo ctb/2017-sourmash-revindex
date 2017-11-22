@@ -69,7 +69,7 @@ def main():
         print('hash {}, in {} samples; lineage: {}'.format(hashval, count, ";".join(lca_utils.zip_lineage(lca))), file=sys.stderr)
         found += 1
 
-    print('found', found, 'of', total, file=sys.stderr)
+    print('found {} of {} ({:.2f}%)'.format(found, total, found / total * 100), file=sys.stderr)
     print('outputting distribution of unknowns', file=sys.stderr)
     print('commonality,n,sum_n')
 
