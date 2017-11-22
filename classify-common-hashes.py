@@ -8,15 +8,13 @@ Then output statistics about how many remain unclassified.
 import argparse
 import collections
 import sys
-sys.path.insert(0, 'kraken/')
-sys.path.insert(0, 'revindex/')
 
 import revindex_utils
-import lca_json
+from sourmash_lib.lca import lca_utils
 
 SCALED=100000
 DEFAULT_KSIZE=31
-DEFAULT_SAMPLE_THRESHOLD=10
+DEFAULT_SAMPLE_THRESHOLD=2
 DEFAULT_ABUND_THRESHOLD=1
 
 
@@ -28,16 +26,12 @@ def main():
     p.add_argument('--abundance-threshold',
                    default=DEFAULT_ABUND_THRESHOLD, type=int)
     p.add_argument('revindex')
-    p.add_argument('lca_json', nargs='+')
+    p.add_argument('db', nargs='+')
     args = p.parse_args()
 
     idx = revindex_utils.HashvalRevindex(args.revindex)
 
-    lca_db_list = []
-    for lca_filename in args.lca_json:
-        lca_db = lca_json.LCA_Database(lca_filename)
-        taxfoo, hashval_to_lca, _ = lca_db.get_database(args.ksize, SCALED)
-        lca_db_list.append((taxfoo, hashval_to_lca))
+    lca_db_list, ksize, scaled = lca_utils.load_databases(args.db, SCALED)
     
     cnt = collections.Counter()
     for k, v in idx.hashval_to_abunds.items():
@@ -54,10 +48,9 @@ def main():
         total += 1
         lca_set = set()
 
-        for (_, hashval_to_lca) in lca_db_list:
-            this_lca = hashval_to_lca.get(hashval)
-            if this_lca is not None:
-                lca_set.add(this_lca)
+        for lca_db in lca_db_list:
+            lineages = lca_db.get_lineage_assignments(hashval)
+            lca_set.update(lineages)
 
         if not lca_set:
             unknown[count] += 1
@@ -65,10 +58,15 @@ def main():
 
         assert lca_set, lca_set
 
-        lca = taxfoo.find_lca(lca_set)
-        assert(lca), lca
+        # for each list of tuple_info [(rank, name), ...] build
+        # a tree that lets us discover lowest-common-ancestor.
+        tree = lca_utils.build_tree(lca_set)
 
-        print('hash {}, in {} samples; lineage: {}'.format(hashval, count, ";".join(taxfoo.get_lineage(lca))))
+        # now find either a leaf or the first node with multiple
+        # children; that's our lowest-common-ancestor node.
+        lca, reason = lca_utils.find_lca(tree)
+
+        print('hash {}, in {} samples; lineage: {}'.format(hashval, count, ";".join(lca_utils.zip_lineage(lca))))
         found += 1
 
     print('found', found, 'of', total)
