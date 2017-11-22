@@ -66,17 +66,17 @@ def main():
         # children; that's our lowest-common-ancestor node.
         lca, reason = lca_utils.find_lca(tree)
 
-        print('hash {}, in {} samples; lineage: {}'.format(hashval, count, ";".join(lca_utils.zip_lineage(lca))))
+        print('hash {}, in {} samples; lineage: {}'.format(hashval, count, ";".join(lca_utils.zip_lineage(lca))), file=sys.stderr)
         found += 1
 
-    print('found', found, 'of', total)
-    print('distribution of unknowns:')
-    print('commonality n')
+    print('found', found, 'of', total, file=sys.stderr)
+    print('outputting distribution of unknowns', file=sys.stderr)
+    print('commonality,n,sum_n')
 
     sofar = 0
     for k, cnt in sorted(unknown.items()):
         sofar += cnt
-        print('{} {} {}'.format(k, cnt, sofar))
+        print('{},{},{}'.format(k, cnt, sofar))
 
 
 if __name__ == '__main__':
