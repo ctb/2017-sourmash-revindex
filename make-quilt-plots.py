@@ -13,6 +13,11 @@ import math
 import sys
 import os
 
+import numpy
+import scipy
+import pylab
+import scipy.cluster.hierarchy as sch
+
 
 def mutinfo(total_n, n_common, n_a, n_b):
     mi = 0.0
@@ -75,6 +80,38 @@ def test_mutinfo_3():
     total_n = 2
 
     assert mutinfo(total_n, common, n_a, n_b) == 0.0
+
+
+def plot_matrix(D, vmax=1.0, vmin=0.0):
+    """Build a composite plot showing dendrogram + distance matrix/heatmap.
+
+    Returns a matplotlib figure."""
+    fig = pylab.figure(figsize=(8, 8))
+
+    # compute dendrogram (but don't plot it)
+    Y = sch.linkage(D, method='single')  # centroid
+
+    Z1 = sch.dendrogram(Y, orientation='left', no_labels=True, no_plot=True)
+
+    # plot matrix
+    axmatrix = fig.add_axes([0.1, 0.1, 0.6, 0.6])
+
+    # (this reorders D by the clustering in Z1)
+    idx1 = Z1['leaves']
+    D = D[idx1, :]
+    D = D[:, idx1]
+
+    # show matrix
+    im = axmatrix.matshow(D, aspect='auto', origin='lower',
+                          cmap=pylab.cm.YlGnBu, vmin=vmin, vmax=vmax)
+    axmatrix.set_xticks([])
+    axmatrix.set_yticks([])
+
+    # Plot colorbar.
+    axcolor = fig.add_axes([0.72, 0.1, 0.02, 0.6])
+    pylab.colorbar(im, cax=axcolor)
+
+    return fig
 
 
 def main():
@@ -157,6 +194,9 @@ def main():
 
         with open(output_name + '.labels.txt', 'w') as fp:
             fp.write("\n".join(map(str, hashlist)))
+
+        fig = plot_matrix(pa)
+        fig.savefig(output_name + '.pdf')
             
 
 if __name__ == '__main__':
