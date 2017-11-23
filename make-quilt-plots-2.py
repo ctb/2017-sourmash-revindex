@@ -5,6 +5,7 @@ output a hash co-occurrence matrix that can be used to cluster samples.
 """
 from __future__ import print_function
 
+import random
 import argparse
 import collections
 import sourmash_lib.signature
@@ -150,6 +151,7 @@ def main():
 
     ## now, for each query...
     listfp = open('list.txt', 'wt')
+    listassocfp = open('list.assoc.txt', 'wt')
     for filename in args.query:
         #print('...loading query {}'.format(filename))
         sig = sourmash_lib.signature.load_one_signature(filename,
@@ -210,6 +212,68 @@ def main():
 
         pa_zero_val = numpy.sum(numpy.square(pa)) / len(query_hashes)**2
         print(os.path.basename(filename), pa_zero_val, pamin, pamax, file=listfp)
+
+        ## @CTB look at associations
+        assoc_hashes = set()
+        for h in all_hashes:
+            if h in query_hashes:
+                assoc_hashes.add(h)
+                continue
+            a = hashes_by_sig.get(h)
+            for qh in query_hashes:
+                b = hashes_by_sig.get(qh)
+                common = len(a.intersection(b))
+
+                mi = mutinfo(total_n, common, len(a), len(b))
+                if mi > 0.5:
+                    assoc_hashes.add(h)
+
+        print('got {} assoc hashes'.format(len(assoc_hashes)))
+        print('downsampling to 500')
+
+        hashlist = random.sample(assoc_hashes, 500)
+        hashlist = list(hashlist)
+
+        pa = numpy.zeros((len(hashlist), len(hashlist)),
+                          dtype=numpy.float)
+
+        for n, hashval1 in enumerate(hashlist):
+            if n % 1000 == 0 and n:
+                print('...', n)
+            a = hashes_by_sig.get(hashval1)
+            for o, hashval2 in enumerate(hashlist):
+                if o <= n:
+                    b = hashes_by_sig.get(hashval2)
+                    common = len(a.intersection(b))
+
+                    mi = mutinfo(total_n, common, len(a), len(b))
+                    pa[n][o] = mi
+                    pa[o][n] = mi
+
+        print('matrix scale: min {}, max {}'.format(pa.min(), pa.max()))
+
+        output_name = os.path.basename(filename) + '.assoc.quilt'
+
+        with open(output_name, 'wb') as fp:
+            numpy.save(fp, pa)
+
+        with open(output_name + '.labels.txt', 'w') as fp:
+            fp.write("\n".join(map(str, hashlist)))
+
+        fig = plot_matrix(pa)
+        fig.savefig(output_name + '.pdf')
+        pylab.close()
+        
+        ## calculate a single number representing ...something.
+        pamin, pamax = pa.min(), pa.max()
+        pa -= pa.min()
+        if pa.max() == 0.0:
+            pa = numpy.ones(pa.shape, dtype=numpy.float)
+        else:
+            pa /= pa.max()
+
+        pa_zero_val = numpy.sum(numpy.square(pa)) / len(hashlist)**2
+        print(os.path.basename(filename), pa_zero_val, pamin, pamax, file=listassocfp)
             
 
 if __name__ == '__main__':
