@@ -21,7 +21,7 @@ import scipy.cluster.hierarchy as sch
 
 def mutinfo(total_n, n_common, n_a, n_b):
     mi = 0.0
-    norm = 1
+    norm = True
 
     if n_common:
         mi = math.log(float(n_common) / n_a / n_b * total_n, 2)
@@ -31,7 +31,7 @@ def mutinfo(total_n, n_common, n_a, n_b):
         else:
             mi = 1.0
 
-    return mi*n_common
+    return mi #*n_common
 
 
 def test_mutinfo():
@@ -82,11 +82,11 @@ def test_mutinfo_3():
     assert mutinfo(total_n, common, n_a, n_b) == 0.0
 
 
-def plot_matrix(D, vmax=1.0, vmin=0.0):
+def plot_matrix(D):
     """Build a composite plot showing dendrogram + distance matrix/heatmap.
 
     Returns a matplotlib figure."""
-    fig = pylab.figure(figsize=(8, 8))
+    fig = pylab.figure(figsize=(7, 7))
 
     # compute dendrogram (but don't plot it)
     Y = sch.linkage(D, method='single')  # centroid
@@ -94,7 +94,7 @@ def plot_matrix(D, vmax=1.0, vmin=0.0):
     Z1 = sch.dendrogram(Y, orientation='left', no_labels=True, no_plot=True)
 
     # plot matrix
-    axmatrix = fig.add_axes([0.1, 0.1, 0.6, 0.6])
+    axmatrix = fig.add_axes([0.1, 0.1, 0.75, 0.75])
 
     # (this reorders D by the clustering in Z1)
     idx1 = Z1['leaves']
@@ -103,12 +103,12 @@ def plot_matrix(D, vmax=1.0, vmin=0.0):
 
     # show matrix
     im = axmatrix.matshow(D, aspect='auto', origin='lower',
-                          cmap=pylab.cm.YlGnBu, vmin=vmin, vmax=vmax)
+                          cmap=pylab.cm.YlGnBu)
     axmatrix.set_xticks([])
     axmatrix.set_yticks([])
 
     # Plot colorbar.
-    axcolor = fig.add_axes([0.72, 0.1, 0.02, 0.6])
+    axcolor = fig.add_axes([0.852, 0.1, 0.02, 0.75])
     pylab.colorbar(im, cax=axcolor)
 
     return fig
@@ -149,8 +149,9 @@ def main():
     print('\n...done. Now calculating associations.')
 
     ## now, for each query...
+    listfp = open('list.txt', 'wt')
     for filename in args.query:
-        print('...loading query {}'.format(filename))
+        #print('...loading query {}'.format(filename))
         sig = sourmash_lib.signature.load_one_signature(filename,
                                                         ksize=args.ksize)
         mh = sig.minhash.downsample_scaled(args.scaled)
@@ -159,7 +160,7 @@ def main():
         # intersect with the database of samples
         query_hashes.intersection_update(all_hashes)
 
-        if len(query_hashes) == 0:
+        if len(query_hashes) <= 1:
             print('SKIPPING {}, no intersect hashes'.format(filename))
             continue
 
@@ -173,7 +174,7 @@ def main():
         hashlist = list(query_hashes)
 
         for n, hashval1 in enumerate(hashlist):
-            if n % 1000 == 0:
+            if n % 1000 == 0 and n:
                 print('...', n)
             a = hashes_by_sig.get(hashval1)
             for o, hashval2 in enumerate(hashlist):
@@ -197,6 +198,18 @@ def main():
 
         fig = plot_matrix(pa)
         fig.savefig(output_name + '.pdf')
+        pylab.close()
+
+        ## calculate a single number representing ...something.
+        pamin, pamax = pa.min(), pa.max()
+        pa -= pa.min()
+        if pa.max() == 0.0:
+            pa = numpy.ones(pa.shape, dtype=numpy.float)
+        else:
+            pa /= pa.max()
+
+        pa_zero_val = numpy.sum(numpy.square(pa)) / len(query_hashes)**2
+        print(os.path.basename(filename), pa_zero_val, pamin, pamax, file=listfp)
             
 
 if __name__ == '__main__':
