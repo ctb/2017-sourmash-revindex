@@ -50,7 +50,6 @@ def main():
             hashes.intersection_update(intersect_hashes)
 
         sig_hashes[filename] = hashes
-
         for k in hashes:
             counts[k] += 1
 
